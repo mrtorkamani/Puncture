@@ -1,5 +1,9 @@
 #include <stdio.h>
 #include <math.h>
+#include <gsl/gsl_vector.h>
+#include <gsl/gsl_complex.h>
+#include <gsl/gsl_complex_math.h>
+#include <gsl/gsl_linalg.h>
 
 #define Pi  3.14159265358979323846264338328
 #define Pih 1.57079632679489661923132169164	/* Pi/2*/
@@ -10,47 +14,13 @@ static inline double min (double const x, double const y)
   return x<y ? x : y;
 }
 
-void AB_To_RT(int nvar, double A, double B, double *R, double *T,
-	       derivs *U)
-				 /* R: radial coordinate                    T: \theta coordinate             */
-				 /*On Entrance: U.d0[]=U[]; U.d1[] =U[]_A;  U.d2[] =U[]_B;  U.d3[] =U[]_3;   */
-				 /*                          U.d11[]=U[]_AA; U.d12[]=U[]_AB; U.d13[]=U[]_A3; */
-				 /*                          U.d22[]=U[]_BB; U.d23[]=U[]_B3; U.d33[]=U[]_33; */
-				 /* At Exit:     U.d0[]=U[]; U.d1[] =U[]_R;  U.d2[] =U[]_T;  U.d3[] =U[]_3;  */
-				 /*                          U.d11[]=U[]_RR; U.d12[]=U[]_RT; U.d13[]=U[]_r3; */
-				 /*                          U.d22[]=U[]_TT; U.d23[]=U[]_T3; U.d33[]=U[]_33; */
-{
-						double A_R, A_RR, B_T, B_TT, tworm, tworm2, tworm4, par_m = 1;
-						int ivar;
-
-						par_m = params_get_real("par_m");
-
-					 *R = par_m/2 *1/(1-1/A);
-					 *T = Pih * (B-1);
-
-					 tworm =(2*(*R)-par_m);
-					 tworm2 = tworm*tworm;
-					 tworm4 = tworm2*tworm2;
-					 A_R = - 2 * par_m/tworm2;
-					 A_RR = 8*tworm *par_m/tworm4;
-					 B_T = 1/Pih;
-					 for (ivar = 0; ivar < nvar; ivar++) {
-				     U->d11[ivar] = A_R * A_R * U->d11[ivar] + A_RR * U->d1[ivar];
-				     U->d12[ivar] = A_R * B_T * U->d12[ivar];
-				     U->d13[ivar] = A_R * U->d13[ivar];
-				     U->d22[ivar] = B_T * B_T * U->d22[ivar];
-				     U->d23[ivar] = B_T * U->d23[ivar];
-				     U->d1[ivar] = A_R * U->d1[ivar];
-				     U->d2[ivar] = B_T * U->d2[ivar];
-				   }
-}
-
 
 int main() {
-  double par_b = 2;
-  double x = 1000;
-  double y = 120;
-  double z = 120;
+  /*
+  double par_b = .00001;
+  double x = 10.0;
+  double y = 12.0;
+  double z = 12.0;
   double xs, ys, zs, rs2, phi, X, R, A, B, aux1, aux2, result, Ui;
 
   xs = x / par_b;
@@ -73,13 +43,68 @@ int main() {
 
   printf("A= %f \t B= %f \n",A,B );
 
-  AB_To_RT (A,B);
-
-  double x1, x2;
+  double x1, x2, x3;
   x1 = par_b * (A*A + 1) / (A*A -1) * 2*B/(1+B*B);
   x2 = par_b * 2*A/(1-A*A) * (1-B*B)/(1+B*B) * cos(phi);
+  x3 = par_b * 2*A/(1-A*A) * (1-B*B)/(1+B*B) * sin(phi);
 
-  printf("X=%f \t R= %f \n", X,R);
+  printf("x=%f \t y= %f \t z= %f \n", x1,x2,x3);
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+  double X, R, A=.5, B=.5, phi=1;
+  double At = 0.5 * (A + 1);
 
+  X = 2 * atanh (At);
+  R = Pih + 2 * atan (B);
+
+  double C_c2, U_cb, U_CB, x, r,y,z, par_b = 1.0;
+  gsl_complex C,C1, C_c, C_cc, c, c_C, c_CC, U_c, U_cc, U_C, U_CC;
+  int ivar;
+
+  C = gsl_complex_rect (X,R);
+
+  c = gsl_complex_mul_real (gsl_complex_cosh (C), par_b);	/ c=b*cosh(C)/
+  C1 = gsl_complex_inverse (C);
+
+  //c = gsl_complex_mul_real(gsl_complex_add(C , C1),par_b/2);
+
+  x = GSL_REAL(c);
+  r = GSL_IMAG(c);
+
+  y = r * cos (phi);
+  z = r * sin (phi);
+
+  printf("x =%f y =%f z =%f \n",x,y,z);
+
+  double x1, x2, x3;
+  x1 = par_b * (A*A + 1) / (A*A -1) * 2*B/(1+B*B);
+  x2 = par_b * 2*A/(1-A*A) * (1-B*B)/(1+B*B) * cos(phi);
+  x3 = par_b * 2*A/(1-A*A) * (1-B*B)/(1+B*B) * sin(phi);
+
+  printf("x=%f \t y= %f \t z= %f \n", x1,x2,x3);
+  */
+
+  double eta, eps,r ,x,y,z;
+  double A=0,B=1,phi=1,b=1;
+  gsl_complex kesi,c;
+  eta = 2 * atanh (A);
+  eps = Pih + 2* atan (B);
+
+  kesi = gsl_complex_rect (eps,eta);
+  c = gsl_complex_mul_real(gsl_complex_cosh (kesi),b);
+
+  //x = GSL_REAL(c);
+  //r = GSL_IMAG(c);
+  x = b* cosh (eps) * cos (eta);
+  r = b* sinh (eps) * sin (eta);
+  y = r * cos (phi);
+  z = r * sin (phi);
+  printf("x =%f y =%f z =%f \n",x,y,z);
+
+  double x1, x2, x3;
+  x1 = b * (A*A + 1) / (A*A -1) * 2*B/(1+B*B);
+  x2 = b * 2*A/(1-A*A) * (1-B*B)/(1+B*B) * cos(phi);
+  x3 = b * 2*A/(1-A*A) * (1-B*B)/(1+B*B) * sin(phi);
+
+  printf("x=%f \t y= %f \t z= %f \n", x1,x2,x3);
   return 0;
 }

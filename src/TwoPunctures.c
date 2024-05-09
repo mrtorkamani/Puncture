@@ -82,7 +82,7 @@ void TwoPunctures_params_set_default(){
   _alloc_params_mem_if_req();
 
   /* Add parameters here */
-  params_add_real("par_m",1.0);
+  params_add_real("par_m",0.0);
   params_add_real("par_P1",1.0);
   params_add_real("par_P2",1.0);
   params_add_real("par_P3",1.0);

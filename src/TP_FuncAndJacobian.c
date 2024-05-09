@@ -790,8 +790,8 @@ double PunctTaylorExpandAtArbitPosition (int ivar, int nvar, int n1, int n2, int
   r1 = sqrt (x*x + y*y + z*z);
   T = acos (x/r1);
 
-  A = 1/(1+par_m/2*r1);
-  B = 2*T/Pi -1;
+  A = 1.0/(1.0 + par_m/2.0 *r1);
+  B = 2.0 *T/Pi -1.0;
   phi = atan2 (z, y);
   if (phi < 0)
     phi += 2 * Pi;
